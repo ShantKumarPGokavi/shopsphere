@@ -1,59 +1,85 @@
-// ==========================================
-// TASK 1: DEFINE A PRODUCT OBJECT
-// ==========================================
-// An object groups related data together using key-value pairs.
-const product1 = {
-    name: "Wireless Headphones",
-    price: 4999,
-    description: "Noise-canceling over-ear headphones",
-    inStock: true
-};
 
-// Accessing properties using dot notation
-console.log("--- Task 1: Product Details ---");
-console.log("Product Name:", product1.name);
-console.log("Product Price: ₹", product1.price);
+// ==========================================
+// 1. PRODUCT DATABASE (Catalog)
+// ==========================================
+
+const PRODUCTS = [
+   {id : 101, title : "Alpha Gaming Shoes", price : 4000, stock : 4},
+   {id : 102, title : "Wireless Ergonomic Mouse", price : 1500, stock : 0},
+   {id : 103, title : "Mechanical RGB Keyboard", price : 2800, stock : 3},
+   {id : 104, title : "Premium Bass Headphones", price : 5000, stock : 7}
+];
 
 
 // ==========================================
-// TASK 2: CREATE A PRODUCTS ARRAY (CATALOG)
+// 2. USER CART SYSTEM (Empty initially)
 // ==========================================
-// An array is an ordered list. We use it to store multiple product objects.
-const product2 = {
-    name: "Mechanical Keyboard",
-    price: 3500,
-    description: "RGB backlit tactile keyboard"
-};
 
-const product3 = {
-    name: "Gaming Mouse",
-    price: 1800,
-    description: "Wireless ultra-lightweight mouse"
-};
+let userCart = [];
+// Function to simulate a user clicking "Add to Cart"
+function addTocart(productID){
+    //Use .find() to locate the product in our database matching id
+    const product = PRODUCTS.find(function(Item){
+        return Item.id === productID;
+    });
 
-// Grouping our objects into a single array
-const products = [product1, product2, product3];
+    if(product && product.stock > 0){
+        userCart.push(product);
+        console.log("🛒 Added to cart: ${product.title}");
+    }
+    else{
+       console.log("❌ Cannot add item ${productId}: Out of stock or invalid!");
+        }
+    }
 
-console.log("\n--- Task 2: Current Catalog ---");
-console.log(products);
+ // ==========================================
+ // 3. ASYNCHRONOUS CHECKOUT ENGINE
+ // ==========================================
 
+ function simulatePaymentGateway(){
+    return new Promise(function(resolve){
+        setTimeout(function (){
+          resolve("PAYMENT_SUCCESS_TOKEN");
+        }, 2000);
+    });
+ }
 
+ async function processCheckout(){
+    console.log("\n--- Starting CheckingOut Process ---");
+
+    if(userCart.length === 0){
+        console.log("Checkout aborted...Your Cart is empty!!!");
+        return;
+    }
+   
+     //Calculate the total pricing
+     let subTotal = 0;
+     for(const item of userCart){
+        subTotal += item.price;
+     }
+
+     const tax = subTotal * 0.18;
+     const finalAmount = subTotal + tax;
+
+    console.log(`Subtotal: ₹${subTotal}`);
+    console.log(`GST (18%): ₹${tax}`);
+    console.log(`Total Payable Amount: ₹${finalAmount}`);
+    console.log("Connecting to secured payment gateway... Please do not refresh.");
+
+    const transactionStatus = await simulatePaymentGateway();
+
+    console.log(`✅ Payment Received! Transaction ID: ${transactionStatus}`);
+    console.log("🛍️ Order placed successfully! Thank you for shopping at Shopsphere.");
+
+    userCart = [];
+    
+ }
+  
 // ==========================================
-// TASK 3: ADDING AND REMOVING ITEMS
+// 4. EXECUTION FLOW (Simulating User Actions)
 // ==========================================
-// .push() adds an item to the end. .pop() removes the last item.
-console.log("\n--- Task 3: Testing Array Methods ---");
+   addTocart(101);
+   addTocart(102);
+   addTocart(103);
 
-const product4 = {
-    name: "Smart Watch",
-    price: 5999,
-    description: "Fitness tracker with AMOLED display"
-};
-
-// 1. Add product4 to the array
-products.push(product4);
-console.log("After Pushing New Product (Total items):", products.length);
-
-// 2. Remove the last item from the array
-products.pop();
-console.log("After Popping (Total items back to):", products.length);
+ processCheckout();
