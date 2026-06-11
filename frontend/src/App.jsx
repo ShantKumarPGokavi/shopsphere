@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'; // Added useEffect
+import React, { useState, useEffect } from 'react';
 
-// 1. Component: Individual Product Card
 function ProductCard({ product, onAddToCart }) {
   return (
     <div style={{
@@ -36,26 +35,23 @@ function ProductCard({ product, onAddToCart }) {
   );
 }
 
-// 2. Main Root Component
 function App() {
-  // Products state starts completely empty now because we load it from the DB
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // NEW: Fetching data from our Express Backend on component load
   useEffect(() => {
     fetch('http://localhost:5000/api/products')
       .then((response) => response.json())
       .then((data) => {
-        setProducts(data); // Store the backend items into state
-        setLoading(false); // Turn off loading message
+        setProducts(data);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching database products:", error);
         setLoading(false);
       });
-  }, []); // Empty array dependency means this runs exactly ONCE when the app starts
+  }, []);
 
   const handleAddToCart = (product) => {
     setCart((prevCart) => {
@@ -69,13 +65,21 @@ function App() {
     });
   };
 
+  // NEW FEATURE: Deletion Logic using Array .filter()
+  const handleRemoveFromCart = (productId) => {
+    setCart((prevCart) => {
+      // Return a new array excluding the item that matches this productId
+      return prevCart.filter(item => item.id !== productId);
+    });
+  };
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       
-      {/* Navbar Area */}
+      {/* Navbar */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eee', paddingBottom: '20px' }}>
         <h1 style={{ margin: 0, color: '#222' }}>🛍️ Shopsphere</h1>
         <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0070f3' }}>
@@ -83,7 +87,7 @@ function App() {
         </div>
       </header>
 
-      {/* Catalog Layout */}
+      {/* Catalog */}
       <main style={{ marginTop: '30px' }}>
         <h2>Explore Our Products (MERN Live Data)</h2>
         
@@ -103,7 +107,7 @@ function App() {
 
         <hr style={{ margin: '40px 0', border: '1px solid #eee' }} />
 
-        {/* Checkout Cart Summary Area */}
+        {/* Checkout Summary with New Remove Button */}
         <section style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px' }}>
           <h2>Shopping Cart Summary</h2>
           {cart.length === 0 ? (
@@ -112,9 +116,27 @@ function App() {
             <div>
               <ul style={{ paddingLeft: '20px' }}>
                 {cart.map(item => (
-                  <li key={item.id} style={{ margin: '10px 0', fontSize: '1.1rem' }}>
-                    <strong>{item.name}</strong> - ₹{item.price} x {item.quantity} = 
-                    <span style={{ fontWeight: 'bold', color: '#0070f3' }}> ₹{item.price * item.quantity}</span>
+                  <li key={item.id} style={{ margin: '15px 0', fontSize: '1.1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '500px' }}>
+                    <div>
+                      <strong>{item.name}</strong> - ₹{item.price} x {item.quantity} = 
+                      <span style={{ fontWeight: 'bold', color: '#0070f3' }}> ₹{item.price * item.quantity}</span>
+                    </div>
+                    
+                    {/* Tiny Red Delete Button */}
+                    <button 
+                      onClick={() => handleRemoveFromCart(item.id)} // Pass the ID up on click
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: '#ff4d4f',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      Remove
+                    </button>
                   </li>
                 ))}
               </ul>
