@@ -28,7 +28,7 @@ function addTocart(productID){
         console.log("🛒 Added to cart: ${product.title}");
     }
     else{
-       console.log("❌ Cannot add item ${productId}: Out of stock or invalid!");
+       console.log("❌ Cannot add item ${productID}: Out of stock or invalid!");
         }
     }
 
@@ -61,14 +61,14 @@ function addTocart(productID){
      const tax = subTotal * 0.18;
      const finalAmount = subTotal + tax;
 
-    console.log(`Subtotal: ₹${subTotal}`);
-    console.log(`GST (18%): ₹${tax}`);
-    console.log(`Total Payable Amount: ₹${finalAmount}`);
+    console.log("Subtotal: ₹${subTotal}");
+    console.log("GST (18%): ₹${tax}");
+    console.log("Total Payable Amount: ₹${finalAmount}");
     console.log("Connecting to secured payment gateway... Please do not refresh.");
 
     const transactionStatus = await simulatePaymentGateway();
 
-    console.log(`✅ Payment Received! Transaction ID: ${transactionStatus}`);
+    console.log("✅ Payment Received! Transaction ID: ${transactionStatus}");
     console.log("🛍️ Order placed successfully! Thank you for shopping at Shopsphere.");
 
     userCart = [];
