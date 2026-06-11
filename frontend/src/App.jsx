@@ -1,13 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 
-// ✅ Fix 2: products moved OUTSIDE App so it doesn't recreate on every render
-const products = [
-  { id: 1, name: "Wireless Gaming Mouse", price: 1599, stock: 5 },
-  { id: 2, name: "Mechanical Keyboard", price: 3499, stock: 3 },
-  { id: 3, name: "Noise Cancelling Headphones", price: 5999, stock: 0 },
-  { id: 4, name: "UltraWide Gaming Monitor", price: 18499, stock: 2 }
-];
-
+// 1. Component: Individual Product Card
 function ProductCard({ product, onAddToCart }) {
   return (
     <div style={{
@@ -24,8 +17,8 @@ function ProductCard({ product, onAddToCart }) {
       <p style={{ fontSize: '0.9rem', color: product.stock > 0 ? 'green' : 'red' }}>
         {product.stock > 0 ? `In Stock (${product.stock} left)` : "Out of Stock"}
       </p>
-      <button
-        onClick={() => onAddToCart(product)}
+      <button 
+        onClick={() => onAddToCart(product)} 
         disabled={product.stock === 0}
         style={{
           width: '100%',
@@ -43,50 +36,95 @@ function ProductCard({ product, onAddToCart }) {
   );
 }
 
+// 2. Main Root Component
 function App() {
-  // ✅ Fix 4: cart is now an array of actual items, not just a count
+  // Products state starts completely empty now because we load it from the DB
+  const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Fix 3: no alert(), replaced with proper state-based notification
-  const [notification, setNotification] = useState('');
+  // NEW: Fetching data from our Express Backend on component load
+  useEffect(() => {
+    fetch('http://localhost:5000/api/products')
+      .then((response) => response.json())
+      .then((data) => {
+        setProducts(data); // Store the backend items into state
+        setLoading(false); // Turn off loading message
+      })
+      .catch((error) => {
+        console.error("Error fetching database products:", error);
+        setLoading(false);
+      });
+  }, []); // Empty array dependency means this runs exactly ONCE when the app starts
 
   const handleAddToCart = (product) => {
-    // ✅ Fix 1: functional update (prev => ...) to avoid stale state
-    setCart(prev => [...prev, product]);
-    setNotification(`✅ ${product.name} added to cart!`);
-    setTimeout(() => setNotification(''), 2000); // clears after 2 seconds
+    setCart((prevCart) => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
   };
+
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-
-      {/* Navbar */}
+      
+      {/* Navbar Area */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eee', paddingBottom: '20px' }}>
         <h1 style={{ margin: 0, color: '#222' }}>🛍️ Shopsphere</h1>
         <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0070f3' }}>
-          🛒 Cart ({cart.length}) {/* ✅ cart.length instead of cartCount */}
+          🛒 Cart ({totalItems})
         </div>
       </header>
 
-      {/* ✅ Fix 3: Toast notification rendered in UI instead of alert() */}
-      {notification && (
-        <div style={{ backgroundColor: '#e6f4ea', color: '#2d6a4f', padding: '10px 16px', borderRadius: '6px', marginTop: '16px', fontWeight: 'bold' }}>
-          {notification}
-        </div>
-      )}
-
-      {/* Product Catalog */}
+      {/* Catalog Layout */}
       <main style={{ marginTop: '30px' }}>
-        <h2>Explore Our Products</h2>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
-          {products.map((item) => (
-            <ProductCard
-              key={item.id}
-              product={item}
-              onAddToCart={handleAddToCart}
-            />
-          ))}
-        </div>
+        <h2>Explore Our Products (MERN Live Data)</h2>
+        
+        {loading ? (
+          <p style={{ fontSize: '1.2rem', color: '#666' }}>Connecting to Database Server...</p>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+            {products.map((item) => (
+              <ProductCard 
+                key={item.id} 
+                product={item} 
+                onAddToCart={handleAddToCart} 
+              />
+            ))}
+          </div>
+        )}
+
+        <hr style={{ margin: '40px 0', border: '1px solid #eee' }} />
+
+        {/* Checkout Cart Summary Area */}
+        <section style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px' }}>
+          <h2>Shopping Cart Summary</h2>
+          {cart.length === 0 ? (
+            <p style={{ color: '#666' }}>Your cart is empty. Start adding some items!</p>
+          ) : (
+            <div>
+              <ul style={{ paddingLeft: '20px' }}>
+                {cart.map(item => (
+                  <li key={item.id} style={{ margin: '10px 0', fontSize: '1.1rem' }}>
+                    <strong>{item.name}</strong> - ₹{item.price} x {item.quantity} = 
+                    <span style={{ fontWeight: 'bold', color: '#0070f3' }}> ₹{item.price * item.quantity}</span>
+                  </li>
+                ))}
+              </ul>
+              <div style={{ marginTop: '20px', borderTop: '2px solid #ddd', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>Grand Total:</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'green' }}>₹{totalPrice}</span>
+              </div>
+            </div>
+          )}
+        </section>
       </main>
 
     </div>
